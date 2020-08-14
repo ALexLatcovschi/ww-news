@@ -20,32 +20,28 @@
                     </a>
                 </div>
             </div>
-            <wwLayoutColumn tag="div" ww-default="ww-text" :ww-list="section.data.contentList" class="list"
-                            @ww-add="add(section.data.contentList, $event)"
-                            @ww-remove="remove(section.data.contentList, $event)">
-                <div class="slick-news">
-                    <div class="overflow-block">
-                        <div class="custom-slide" v-for="(item, index) in newsData" :key="index">
-                            <wwLayoutColumn tag="div" ww-default="ww-text" :ww-list="section.data.contentList"
-                                            class="list"
-                                            @ww-add="add(section.data.contentList, $event)"
-                                            @ww-remove="remove(section.data.contentList, $event)">
-                                <div class="round-item"></div>
-                                <div class="info-block">
-                                    <div class="title">
-                                        <a :href="item.link" target="_blank">
-                                            <wwObject class="text" v-bind:ww-object="item.title"></wwObject>
-                                        </a>
-                                    </div>
-                                    <div class="author">
-                                        <wwObject class="text" v-bind:ww-object="item.author"></wwObject>
-                                    </div>
+            <div class="slick-news" v-if="section.data.newsData && section.data.newsData.length > 0">
+                <div class="overflow-block">
+                    <div class="custom-slide" v-for="(item, index) in section.data.newsData" :key="index">
+                        <wwLayoutColumn tag="div" ww-default="ww-text" :ww-list="section.data.contentList"
+                                        class="list"
+                                        @ww-add="add(section.data.contentList, $event)"
+                                        @ww-remove="remove(section.data.contentList, $event)">
+                            <div class="round-item"></div>
+                            <div class="info-block">
+                                <div class="title">
+                                    <a :href="item.link" target="_blank">
+                                        <wwObject class="text" v-bind:ww-object="item.title"></wwObject>
+                                    </a>
                                 </div>
-                            </wwLayoutColumn>
-                        </div>
+                                <div class="author">
+                                    <wwObject class="text" v-bind:ww-object="item.author"></wwObject>
+                                </div>
+                            </div>
+                        </wwLayoutColumn>
                     </div>
                 </div>
-            </wwLayoutColumn>
+            </div>
         </div>
     </div>
 </template>
@@ -54,10 +50,6 @@
 <!-- ✨ Here comes the magic ✨ -->
 <script>
     import axios from 'axios';
-    import VueSlickCarousel from 'vue-slick-carousel';
-    import 'vue-slick-carousel/dist/vue-slick-carousel.css';
-    // optional style for arrows & dots
-    import 'vue-slick-carousel/dist/vue-slick-carousel-theme.css';
 
     export default {
         name: '__COMPONENT_NAME__',
@@ -83,10 +75,11 @@
                 return this.sectionCtrl.get();
             }
         },
-        async created() {
+        created() {
             // Initialize the data once the section is created in the DOM
-            this.init();
-            await this.getMediumData();
+            this.getMediumData();
+            /*      this.getMediumData();
+                  this.getMediumData();*/
         },
         beforeUpdate() {
             if (this.$refs.VueSlickCarousel) {
@@ -159,6 +152,10 @@
                     this.section.data.contentList = [];
                     needUpdate = true;
                 }
+                if (!this.section.data.newsData) {
+                    this.section.data.newsData = this.newsData;
+                    needUpdate = true;
+                }
 
                 if (needUpdate) {
                     this.sectionCtrl.update(this.section);
@@ -186,31 +183,36 @@
             },
             /* wwManager:end */
 
-            async getMediumData() {
-                const response = await axios.get(`https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/42cap`);
-                this.newsData = response.data.items.slice(1).slice(-4);
-                console.log('news data: ', this.newsData);
-                this.newsData.map(el => {
-                    el.title = wwLib.wwObject.getDefault({
-                        type: 'ww-text',
-                        data: {
-                            text: {
-                                en: el.title
-                            }
-                        }
+            getMediumData() {
+                axios.get(`https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/42cap`)
+                    .then(response => {
+                        this.newsData = response.data.items.slice(1).slice(-4);
+                        this.newsData.map(el => {
+                            el.title = wwLib.wwObject.getDefault({
+                                type: 'ww-text',
+                                data: {
+                                    text: {
+                                        en: el.title
+                                    }
+                                }
+                            });
+                            el.author = wwLib.wwObject.getDefault({
+                                type: 'ww-text',
+                                data: {
+                                    text: {
+                                        en: el.author
+                                    }
+                                }
+                            });
+                        });
+                        this.init();
+                    })
+                    .catch(e => {
+                        console.log('err: ', e);
                     });
-                    el.author = wwLib.wwObject.getDefault({
-                        type: 'ww-text',
-                        data: {
-                            text: {
-                                en: el.author
-                            }
-                        }
-                    });
-                });
+                return this.newsData;
             }
-        },
-        components: { VueSlickCarousel }
+        }
     };
 </script>
 
