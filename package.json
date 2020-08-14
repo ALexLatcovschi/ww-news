@@ -1,5 +1,5 @@
 {
-  "name": "hello-world",
+  "name": "medium-news",
   "type": "section",
   "wewebPublic": "true",
   "repository": {
@@ -15,8 +15,7 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "vue": "^2.6.11",
-    "vue-slick-carousel": "^1.0.6"
+    "vue": "^2.6.11"
   },
   "devDependencies": {
     "weweb-client": "latest"
